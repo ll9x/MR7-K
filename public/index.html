@@ -1,1 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multiplayer Room Game</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    #joinScreen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8); z-index: 10;
+      display: flex; justify-content: center; align-items: center; flex-direction: column;
+    }
+    input, button {
+      margin: 5px; padding: 10px; font-size: 16px;
+    }
+    .label { color: white; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <div id="joinScreen">
+    <div class="label">Enter your name:</div>
+    <input id="playerName" placeholder="Your name" />
+    <div class="label">Enter Room ID (or leave blank to create one):</div>
+    <input id="roomId" placeholder="Room ID" />
+    <button onclick="joinRoom()">Join</button>
+  </div>
 
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let playerName = '';
+    let roomId = '';
+    let players = {};
+
+    function joinRoom() {
+      playerName = document.getElementById("playerName").value.trim();
+      roomId = document.getElementById("roomId").value.trim();
+      if (!playerName) return alert("Please enter your name");
+      if (!roomId) roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Redirect to game.html with query parameters
+      window.location.href = `game.html?name=${encodeURIComponent(playerName)}&room=${encodeURIComponent(roomId)}`;
+    }
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    document.addEventListener("keydown", (e) => {
+      socket.emit("move", { roomId, key: e.key });
+    });
+
+    socket.on("state", (state) => {
+      players = state;
+      drawPlayers();
+    });
+
+    function drawPlayers() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let id in players) {
+        const p = players[id];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(p.name, p.x - 20, p.y - 25);
+      }
+    }
+  </script>
+</body>
+</html>

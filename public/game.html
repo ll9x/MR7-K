@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة البحث عن الكنز المخفي</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            touch-action: none;
+        }
+        
+        #game-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .touch-control {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            margin: 0 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 200;
+            text-align: center;
+        }
+        
+        #start-button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        #puzzle-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 300;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .puzzle-option {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        
+        #inventory {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            z-index: 100;
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 200px;
+        }
+        
+        .inventory-item {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        
+        #mission-info {
+            position: absolute;
+            bottom: 120px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            z-index: 100;
+            max-width: 300px;
+        }
+        
+        #message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 400;
+            text-align: center;
+            display: none;
+            max-width: 80%;
+        }
+        
+        #close-message {
+            padding: 8px 16px;
+            margin-top: 15px;
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div id="game-container"></div>
+    
+    <div id="ui">
+        <div id="player-name" style="font-weight: bold; font-size: 1.2em; margin-bottom: 5px; color: #4CAF50;">MR7-MostafaAlrawi</div>
+        <div id="position-info">الموقع: (0, 0, 0)</div>
+        <div id="score-info">النقاط: 0</div>
+        <div id="items-info">العناصر: 0/5</div>
+        <div id="clue-info">الدليل: ابحث عن الأدلة المخفية!</div>
+        <div id="mission-text">استكشف العالم وابحث عن الكنز المخفي!</div>
+        <div id="inventory"></div>
+    </div>
+    
+
+    
+    <div id="inventory"></div>
+    
+    <div id="mission-info">
+        <h3>المهمة الحالية:</h3>
+        <p id="mission-text">جد 5 مفاتيح لفتح الباب النهائي</p>
+    </div>
+    
+    <div id="controls">
+        <div class="touch-control" id="up-btn">↑</div>
+        <div class="touch-control" id="left-btn">←</div>
+        <div class="touch-control" id="right-btn">→</div>
+        <div class="touch-control" id="down-btn">↓</div>
+    </div>
+    
+    <div id="start-screen" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; color: white; text-align: center;">
+        <h1 style="font-size: 3em; margin-bottom: 10px;">لعبة البحث عن الكنز المخفي</h1>
+        <h2 style="font-size: 2em; margin: 0 0 10px 0; color: #4CAF50;">MR7-MostafaAlrawi</h2>
+        <p style="font-size: 1.5em; margin-bottom: 30px;">ابحث عن الأدلة المخفية في العالم للعثور على الكنز. اللاعب الذي يجده أولاً يفوز!</p>
+        <button id="start-button" style="background-color: #4CAF50; color: white; border: none; padding: 15px 30px; font-size: 1.5em; border-radius: 5px; cursor: pointer;">ابدأ المغامرة</button>
+    </div>
+    
+    <div id="puzzle-screen">
+        <h2 id="puzzle-title">لغز الرياضيات</h2>
+        <p id="puzzle-question">ما هو ناتج 5 + 7؟</p>
+        <div id="puzzle-options"></div>
+    </div>
+    
+    <div id="message-box" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 0, 0.8); color: white; padding: 20px; border-radius: 10px; z-index: 200; min-width: 300px; text-align: center;">
+        <h2 id="message-title" style="margin-top: 0;">رسالة</h2>
+        <p id="message-content">مرحباً بك في اللعبة!</p>
+        <button id="close-message" style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">إغلاق</button>
+    </div>
+
+    <!-- مكتبة Three.js -->
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- مكتبة Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.min.js"></script>
+    <script src="treasureGame.js"></script>
+    
+    <script>
+        // عناصر DOM
+        const gameContainer = document.getElementById('game-container');
+        const positionInfo = document.getElementById('position-info');
+        const scoreInfo = document.getElementById('score-info');
+        const itemsInfo = document.getElementById('items-info');
+        const startScreen = document.getElementById('start-screen');
+        const puzzleScreen = document.getElementById('puzzle-screen');
+        const puzzleTitle = document.getElementById('puzzle-title');
+        const puzzleQuestion = document.getElementById('puzzle-question');
+        const puzzleOptions = document.getElementById('puzzle-options');
+        const startButton = document.getElementById('start-button');
+        const missionText = document.getElementById('mission-text');
+        const inventory = document.getElementById('inventory');
+        const messageBox = document.getElementById('message-box');
+        const messageTitle = document.getElementById('message-title');
+        const messageContent = document.getElementById('message-content');
+        const closeMessage = document.getElementById('close-message');
+        
+        // عناصر التحكم باللمس
+        const upBtn = document.getElementById('up-btn');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const downBtn = document.getElementById('down-btn');
+        
+        // متغيرات اللعبة
+        let scene, camera, renderer, character, floor;
+        let keys = {};
+        let touchControls = {
+            up: false,
+            left: false,
+            right: false,
+            down: false
+        };
+        let speed = 0.1;
+        let rotationSpeed = 0.03;
+        let score = 0;
+        let collectedItems = 0;
+        let gameStarted = false;
+        let socket;
+        let otherPlayers = {};
+        let playerTargets = {};
+        let interpolationFactor = 0.1; // عامل للتحريك السلس
+        
+        // متغيرات خاصة بلعبة البحث عن الكنز
+        let hiddenTreasure = null; // الكنز المخفي الرئيسي
+        let clues = []; // الأدلة المنتشرة في اللعبة
+        let discoveredClues = []; // الأدلة التي تم اكتشافها
+        let treasureFound = false; // هل تم العثور على الكنز
+        let winner = null; // الفائز الذي عثر على الكنز أولاً
+        
+        // الأدلة المتاحة
+        const availableClues = [
+            {
+                title: "دليل 1",
+                description: "ابحث عن الشجرة الكبيرة في الزاوية الشمالية الشرقية",
+                position: new THREE.Vector3(20, 0, 20)
+            },
+            {
+                title: "دليل 2",
+                description: "ابحث عن الصخرة الكبيرة في الزاوية الجنوبية الغربية",
+                position: new THREE.Vector3(-20, 0, -20)
+            },
+            {
+                title: "دليل 3",
+                description: "ابحث عن الباب الخشبي في الزاوية الشمالية الغربية",
+                position: new THREE.Vector3(-20, 0, 20)
+            }
+        ];
+        
+        // قراءة معلمات URL للحصول على اسم اللاعب ومعرف الغرفة
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('room') || Math.random().toString(36).substring(2, 8).toUpperCase();
+        const playerName = urlParams.get('name') || 'لاعب' + Math.floor(Math.random() * 1000);
+        
+        let activePuzzle = null;
+        let doors = [];
+        let finalDoor = null;
+        let items = [];
+        
+        // الألغاز المتاحة
+        const puzzles = [
+            {
+                title: "لغز الرياضيات",
+                question: "ما هو ناتج 15 + 27؟",
+                options: ["42", "32", "52", "37"],
+                correct: 0
+            },
+            {
+                title: "لغز المنطق",
+                question: "ما هو الشيء الذي كلما أخذت منه كبر؟",
+                options: ["الحفرة", "الصورة", "الكتاب", "الكعكة"],
+                correct: 0
+            },
+            {
+                title: "لغز الثقافة العامة",
+                question: "ما هي عاصمة فرنسا؟",
+                options: ["لندن", "برلين", "باريس", "روما"],
+                correct: 2
+            },
+            {
+                title: "لغز الرياضيات",
+                question: "إذا كان 3 أشخاص يستغرقون 3 ساعات لإنهاء عمل، فكم يستغرق 9 أشخاص؟",
+                options: ["9 ساعات", "3 ساعات", "1 ساعة", "6 ساعات"],
+                correct: 1
+            },
+            {
+                title: "لغز المنطق",
+                question: "ما الشيء الذي له أوراق وليس بنبات، وله جلد وليس بحيوان؟",
+                options: ["الكتاب", "الحذاء", "الطاولة", "القلم"],
+                correct: 0
+            }
+        ];
+        
+        // تهيئة المشهد
+        function init() {
+            // إنشاء المشهد
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // لون السماء
+            
+            // إنشاء الكاميرا
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, 0);
+            
+            // إنشاء المحرك الرسومي
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            gameContainer.appendChild(renderer.domElement);
+            
+            // إضافة الإضاءة
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(0, 20, 10);
+            scene.add(directionalLight);
+            
+            // إضافة البيئة
+            addEnvironment();
+            
+            // إضافة الأدلة المخفية
+            addClues();
+            
+            // إضافة الكنز المخفي
+            addHiddenTreasure();
+            
+            // إنشاء الشخصية
+            createCharacter();
+            
+            // إعداد أحداث لوحة المفاتيح
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+            
+            // إعداد التحكم باللمس
+            setupTouchControls();
+            
+            // إعداد تغيير حجم النافذة
+            window.addEventListener('resize', onWindowResize);
+            
+            // إعداد Socket.IO
+            socket = io();
+            
+            // الانضمام إلى غرفة
+            socket.emit('join-room', { roomId, playerName });
+            
+            // استقبال حالة اللاعبين
+            socket.on('state', (players) => {
+                // تحديث اللاعبين الآخرين
+                for (const id in players) {
+                    if (id !== socket.id) {
+                        const playerData = players[id];
+                        
+                        // إذا كان اللاعب غير موجود، قم بإنشائه
+                        if (!otherPlayers[id]) {
+                            const otherCharacter = createOtherCharacter(playerData.name);
+                            otherPlayers[id] = otherCharacter;
+                            scene.add(otherCharacter);
+                        }
+                        
+                        // تحديث موقع اللاعب المستهدف
+                        if (!playerTargets[id]) {
+                            playerTargets[id] = {
+                                position: new THREE.Vector3(),
+                                rotation: { y: 0 }
+                            };
+                        }
+                        
+                        playerTargets[id].position.set(playerData.x, playerData.y || 1, playerData.z);
+                        
+                        if (playerData.rotation && typeof playerData.rotation.y === 'number') {
+                            playerTargets[id].rotation.y = playerData.rotation.y;
+                        }
+                        
+                        // تحديث حالة الفائز إذا وجد
+                        if (playerData.foundTreasure) {
+                            treasureFound = true;
+                            winner = playerData.name;
+                            showMessage("نهاية اللعبة", `لقد فاز ${playerData.name} بالعثور على الكنز!`);
+                        }
+                    }
+                }
+            });
+            
+            // استقبال رسائل تحديث الأدلة
+            socket.on('clue-found', ({ playerId, clueIndex }) => {
+                if (playerId !== socket.id && clues[clueIndex]) {
+                    const clue = clues[clueIndex];
+                    clue.material.color.set(0xFFFFFF);
+                    clue.material.emissive.set(0xFFFFFF);
+                    showMessage("تم اكتشاف دليل", `لقد وجد لاعب آخر دليلاً!`);
+                }
+            });
+            
+            // استقبال رسائل العثور على الكنز
+            socket.on('treasure-found', ({ playerName }) => {
+                treasureFound = true;
+                winner = playerName;
+                if (hiddenTreasure) hiddenTreasure.visible = false;
+                showMessage("نهاية اللعبة", `لقد فاز ${playerName} بالعثور على الكنز!`);
+            });
+            
+            // بدء حلقة الرسم
+            animate();
+        }
+        
+        // إضافة البيئة
+        function addEnvironment() {
+            // إنشاء الأرضية
+            const floorGeometry = new THREE.PlaneGeometry(100, 100);
+            const floorMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x3a5f0b,
+                side: THREE.DoubleSide
+            });
+            floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+            
+            // إضافة بعض الأشجار
+            const treeGeometry = new THREE.ConeGeometry(2, 5, 8);
+            const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
+            
+            for (let i = 0; i < 30; i++) {
+                const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+                tree.position.x = (Math.random() - 0.5) * 80;
+                tree.position.z = (Math.random() - 0.5) * 80;
+                tree.position.y = 2.5;
+                tree.castShadow = true;
+                scene.add(tree);
+                
+                // جذع الشجرة
+                const trunkGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2);
+                const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.copy(tree.position);
+                trunk.position.y = 0;
+                trunk.castShadow = true;
+                scene.add(trunk);
+            }
+            
+            // إضافة بعض الصخور
+            const rockGeometry = new THREE.DodecahedronGeometry(1, 0);
+            const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
+            
+            for (let i = 0; i < 15; i++) {
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                rock.position.x = (Math.random() - 0.5) * 80;
+                rock.position.z = (Math.random() - 0.5) * 80;
+                rock.position.y = 0.5;
+                rock.castShadow = true;
+                scene.add(rock);
+            }
+        }
+        
+        // إضافة الأبواب
+        function addDoors() {
+            const doorGeometry = new THREE.BoxGeometry(3, 5, 0.5);
+            const doorMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+            
+            // أبواب عادية
+            for (let i = 0; i < 3; i++) {
+                const door = new THREE.Mesh(doorGeometry, doorMaterial);
+                door.position.x = (Math.random() - 0.5) * 60;
+                door.position.z = (Math.random() - 0.5) * 60;
+                door.position.y = 2.5;
+                door.castShadow = true;
+                door.receiveShadow = true;
+                door.userData.isDoor = true;
+                door.userData.requiresKey = Math.random() > 0.5;
+                scene.add(door);
+                doors.push(door);
+            }
+            
+            // الباب النهائي
+            const finalDoorMaterial = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
+            finalDoor = new THREE.Mesh(doorGeometry, finalDoorMaterial);
+            finalDoor.position.set(0, 2.5, -40);
+            finalDoor.castShadow = true;
+            finalDoor.receiveShadow = true;
+            finalDoor.userData.isDoor = true;
+            finalDoor.userData.isFinalDoor = true;
+            scene.add(finalDoor);
+        }
+        
+        // إضافة الأدلة المخفية
+        function addClues() {
+            // تعريف الأدلة مع نصوص وصفية
+            const clueData = [
+                { position: { x: 15, y: 1, z: 10 }, title: "دليل #1", description: "ابحث عن الكنز بالقرب من الماء" },
+                { position: { x: -20, y: 1, z: -15 }, title: "دليل #2", description: "الكنز مخبأ بين الأشجار العالية" },
+                { position: { x: 5, y: 1, z: -25 }, title: "دليل #3", description: "انظر في الاتجاه الشمالي للعثور على الكنز" },
+                { position: { x: -10, y: 1, z: 20 }, title: "دليل #4", description: "الكنز محاط بأربعة أشجار" },
+                { position: { x: 25, y: 1, z: -5 }, title: "دليل #5", description: "الكنز يتوهج بلون ذهبي" }
+            ];
+            
+            // إنشاء الأدلة ككرات متوهجة
+            const clueGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            
+            for (let i = 0; i < clueData.length; i++) {
+                const data = clueData[i];
+                const clueMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x00ff00,
+                    emissive: 0x00ff00,
+                    emissiveIntensity: 0.5
+                });
+                
+                const clue = new THREE.Mesh(clueGeometry, clueMaterial);
+                clue.position.set(data.position.x, data.position.y, data.position.z);
+                
+                // إضافة معلومات الدليل
+                clue.userData = {
+                    isClue: true,
+                    title: data.title,
+                    description: data.description
+                };
+                
+                scene.add(clue);
+                clues.push(clue);
+            }
+        }
+        
+        // إضافة الكنز المخفي
+        function addHiddenTreasure() {
+            // إنشاء الكنز كصندوق ذهبي متوهج
+            const treasureGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const treasureMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffd700,
+                emissive: 0xffd700,
+                emissiveIntensity: 0.7,
+                metalness: 1.0,
+                roughness: 0.3
+            });
+            
+            hiddenTreasure = new THREE.Mesh(treasureGeometry, treasureMaterial);
+            
+            // وضع الكنز في مكان مخفي بعيداً عن الأدلة
+            hiddenTreasure.position.set(-30, 1, -30);
+            
+            // إضافة معلومات الكنز
+            hiddenTreasure.userData = {
+                isTreasure: true
+            };
+            
+            scene.add(hiddenTreasure);
+        }
+        
+        // إضافة العناصر القابلة للجمع
+        function addCollectibleItems() {
+            const itemGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const itemMaterial = new THREE.MeshStandardMaterial({ color: 0xFFD700 });
+            
+            for (let i = 0; i < totalItems; i++) {
+                const item = new THREE.Mesh(itemGeometry, itemMaterial);
+                item.position.x = (Math.random() - 0.5) * 80;
+                item.position.z = (Math.random() - 0.5) * 80;
+                item.position.y = 0.5;
+                item.castShadow = true;
+                item.userData.isCollectible = true;
+                scene.add(item);
+                items.push(item);
+            }
+        }
+        
+        // إنشاء الشخصية
+        function createCharacter() {
+            // إنشاء مجموعة للشخصية الرئيسية
+            character = new THREE.Group();
+            character.position.y = 0;
+            scene.add(character);
+            
+            // جسم الشخصية
+            const bodyGeometry = new THREE.BoxGeometry(1, 2, 1);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1;
+            body.castShadow = true;
+            character.add(body);
+            
+            // رأس الشخصية
+            const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffcc00 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 2.5; // فوق الجسم
+            character.add(head);
+            
+            // عيون الشخصية
+            const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(0.2, 2.6, 0.4);
+            character.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(-0.2, 2.6, 0.4);
+            character.add(rightEye);
+            
+            // مؤشر الاتجاه (مخروط في مقدمة الشخصية)
+            const directionGeometry = new THREE.ConeGeometry(0.3, 0.8, 8);
+            const directionMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); // لون مختلف عن اللاعبين الآخرين
+            const directionIndicator = new THREE.Mesh(directionGeometry, directionMaterial);
+            directionIndicator.rotation.x = Math.PI / 2; // توجيه المخروط للأمام
+            directionIndicator.position.set(0, 1, -0.8); // وضعه في مقدمة الشخصية
+            character.add(directionIndicator);
+            
+            // إضافة أطراف للشخصية
+            const limbGeometry = new THREE.BoxGeometry(0.25, 1, 0.25);
+            const limbMaterial = new THREE.MeshStandardMaterial({ color: 0xff7700 });
+            
+            // الذراعان
+            const rightArm = new THREE.Mesh(limbGeometry, limbMaterial);
+            rightArm.position.set(0.7, 1.5, 0);
+            character.add(rightArm);
+            
+            const leftArm = new THREE.Mesh(limbGeometry, limbMaterial);
+            leftArm.position.set(-0.7, 1.5, 0);
+            character.add(leftArm);
+            
+            // الساقان
+            const rightLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+            rightLeg.position.set(0.3, 0.5, 0);
+            character.add(rightLeg);
+            
+            const leftLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+            leftLeg.position.set(-0.3, 0.5, 0);
+            character.add(leftLeg);
+        }
+        
+        // إنشاء شخصية للاعب آخر
+        function createOtherCharacter(playerName) {
+            const otherCharacter = new THREE.Group();
+            otherCharacter.position.y = 0;
+            
+            // الجسم
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(1, 2, 1),
+                new THREE.MeshStandardMaterial({ color: 0x0088ff })
+            );
+            body.position.y = 1;
+            otherCharacter.add(body);
+            
+            // الرأس
+            const head = new THREE.Mesh(
+                new THREE.SphereGeometry(0.5, 16, 16),
+                new THREE.MeshStandardMaterial({ color: 0xccccff })
+            );
+            head.position.y = 2.25;
+            otherCharacter.add(head);
+            
+            // العينين
+            const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(0.2, 2.35, 0.4);
+            otherCharacter.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(-0.2, 2.35, 0.4);
+            otherCharacter.add(rightEye);
+            
+            // الذراعين
+            const armGeometry = new THREE.BoxGeometry(0.25, 1.5, 0.25);
+            const armMaterial = new THREE.MeshStandardMaterial({ color: 0x0088ff });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(0.75, 1, 0);
+            otherCharacter.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(-0.75, 1, 0);
+            otherCharacter.add(rightArm);
+            
+            // الساقين
+            const legGeometry = new THREE.BoxGeometry(0.25, 1.5, 0.25);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(0.25, -0.25, 0);
+            otherCharacter.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(-0.25, -0.25, 0);
+            otherCharacter.add(rightLeg);
+            
+            // مخروط للإشارة إلى الاتجاه
+            const directionCone = new THREE.Mesh(
+                new THREE.ConeGeometry(0.25, 1, 8),
+                new THREE.MeshStandardMaterial({ color: 0xffff00 })
+            );
+            directionCone.position.set(0, 1, -0.75);
+            directionCone.rotation.x = -Math.PI / 2;
+            otherCharacter.add(directionCone);
+            
+            // إضافة اسم اللاعب فوق الشخصية
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#ffffff';
+            context.font = 'bold 24px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(playerName, 128, 32);
+            
+            const nameTexture = new THREE.CanvasTexture(canvas);
+            const nameMaterial = new THREE.SpriteMaterial({ map: nameTexture, transparent: true });
+            const nameSprite = new THREE.Sprite(nameMaterial);
+            nameSprite.position.set(0, 3, 0);
+            nameSprite.scale.set(2, 0.5, 1);
+            otherCharacter.add(nameSprite);
+            
+            return otherCharacter;
+        }
+        
+        // بدء اللعبة
+        function startGame() {
+            startScreen.style.display = 'none';
+
+            // Connect to socket server and join room
+            socket = io();
+            socket.on('connect', () => {
+                console.log('Connected to server with ID:', socket.id);
+                socket.emit('join-room', { roomId, playerName });
+            });
+
+            // Listen for game state updates from the server
+            socket.on('state', (players) => {
+                // Remove players who have disconnected
+                Object.keys(otherPlayers).forEach(id => {
+                    if (!players[id]) {
+                        scene.remove(otherPlayers[id]);
+                        delete otherPlayers[id];
+                        delete playerTargets[id];
+                    }
+                });
+
+                for (const id in players) {
+                    if (id === socket.id) continue; // Skip our own player
+
+                    const playerData = players[id];
+                    if (!otherPlayers[id]) {
+                        // Add a new player to the scene with direction indicator
+                        console.log(`Adding new player ${playerData.name} (${id})`);
+                        
+                        // إنشاء مجموعة لتمثيل اللاعب
+                        const playerGroup = new THREE.Group();
+                        
+                        // جسم اللاعب
+                        const playerGeometry = new THREE.BoxGeometry(1, 2, 1);
+                        const playerMaterial = new THREE.MeshStandardMaterial({ color: 0x0000ff });
+                        const playerBody = new THREE.Mesh(playerGeometry, playerMaterial);
+                        playerBody.castShadow = true;
+                        playerBody.position.y = 1; // رفع الجسم قليلاً
+                        playerGroup.add(playerBody);
+                        
+                        // مؤشر الاتجاه (مخروط في مقدمة اللاعب)
+                        const directionGeometry = new THREE.ConeGeometry(0.3, 0.8, 8);
+                        const directionMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+                        const directionIndicator = new THREE.Mesh(directionGeometry, directionMaterial);
+                        directionIndicator.rotation.x = Math.PI / 2; // توجيه المخروط للأمام
+                        directionIndicator.position.set(0, 1, -0.8); // وضعه في مقدمة اللاعب
+                        playerGroup.add(directionIndicator);
+                        
+                        // إضافة أطراف للشخصية
+                        const limbGeometry = new THREE.BoxGeometry(0.25, 1, 0.25);
+                        const limbMaterial = new THREE.MeshStandardMaterial({ color: 0x3366ff });
+                        
+                        // الذراعان
+                        const rightArm = new THREE.Mesh(limbGeometry, limbMaterial);
+                        rightArm.position.set(0.7, 1.5, 0);
+                        playerGroup.add(rightArm);
+                        
+                        const leftArm = new THREE.Mesh(limbGeometry, limbMaterial);
+                        leftArm.position.set(-0.7, 1.5, 0);
+                        playerGroup.add(leftArm);
+                        
+                        // الساقان
+                        const rightLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+                        rightLeg.position.set(0.3, 0.5, 0);
+                        playerGroup.add(rightLeg);
+                        
+                        const leftLeg = new THREE.Mesh(limbGeometry, limbMaterial);
+                        leftLeg.position.set(-0.3, 0.5, 0);
+                        playerGroup.add(leftLeg);
+                        
+                        // إضافة اسم اللاعب فوق الشخصية
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.width = 256;
+                        canvas.height = 64;
+                        context.font = '24px Arial';
+                        context.fillStyle = 'white';
+                        context.textAlign = 'center';
+                        context.fillText(playerData.name, 128, 40);
+                        
+                        const nameTexture = new THREE.CanvasTexture(canvas);
+                        const nameMaterial = new THREE.SpriteMaterial({ map: nameTexture, transparent: true });
+                        const nameSprite = new THREE.Sprite(nameMaterial);
+                        nameSprite.position.set(0, 3, 0);
+                        nameSprite.scale.set(3, 0.8, 1);
+                        playerGroup.add(nameSprite);
+                        
+                        otherPlayers[id] = playerGroup;
+                        scene.add(playerGroup);
+                        
+                        // تهيئة موقع اللاعب الأولي
+                        playerTargets[id] = {
+                            position: new THREE.Vector3(playerData.x, playerData.y, playerData.z),
+                            rotation: { y: playerData.rotation ? playerData.rotation.y : 0 }
+                        };
+                        
+                        // وضع اللاعب في موقعه الأولي
+                        otherPlayers[id].position.copy(playerTargets[id].position);
+                        otherPlayers[id].rotation.y = playerTargets[id].rotation.y;
+                    } 
+                    
+                    // تحديث الموقع والدوران المستهدف للاعب
+                    if (!playerTargets[id]) {
+                        playerTargets[id] = {
+                            position: new THREE.Vector3(),
+                            rotation: { y: 0 }
+                        };
+                    }
+                    
+                    // تعيين الموقع المستهدف
+                    playerTargets[id].position.set(playerData.x, playerData.y, playerData.z);
+                    
+                    // تعيين الدوران المستهدف إذا كان متوفراً
+                    if (playerData.rotation && typeof playerData.rotation.y === 'number') {
+                        playerTargets[id].rotation.y = playerData.rotation.y;
+                    }
+                    
+                    // لا نقوم بتحديث موقع اللاعب هنا مباشرة، بل سنقوم بذلك في دالة التحريك السلس
+                }
+            });
+
+            animate();
+        }
+        
+        // التحكم باللمس
+        function setupTouchControls() {
+            upBtn.addEventListener('touchstart', () => { touchControls.up = true; }, { passive: true });
+            upBtn.addEventListener('touchend', () => { touchControls.up = false; }, { passive: true });
+            
+            leftBtn.addEventListener('touchstart', () => { touchControls.left = true; }, { passive: true });
+            leftBtn.addEventListener('touchend', () => { touchControls.left = false; }, { passive: true });
+            
+            rightBtn.addEventListener('touchstart', () => { touchControls.right = true; }, { passive: true });
+            rightBtn.addEventListener('touchend', () => { touchControls.right = false; }, { passive: true });
+            
+            downBtn.addEventListener('touchstart', () => { touchControls.down = true; }, { passive: true });
+            downBtn.addEventListener('touchend', () => { touchControls.down = false; }, { passive: true });
+        }
+        
+        // أحداث لوحة المفاتيح
+        function onKeyDown(event) {
+            keys[event.code] = true;
+        }
+        
+        function onKeyUp(event) {
+            keys[event.code] = false;
+        }
+        
+        // تغيير حجم النافذة
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // عرض رسالة
+        function showMessage(title, content) {
+            messageTitle.textContent = title;
+            messageContent.textContent = content;
+            messageBox.style.display = 'block';
+        }
+        
+        // عرض لغز
+        function showPuzzle() {
+            activePuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+            puzzleTitle.textContent = activePuzzle.title;
+            puzzleQuestion.textContent = activePuzzle.question;
+            
+            puzzleOptions.innerHTML = '';
+            activePuzzle.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'puzzle-option';
+                button.textContent = option;
+                button.addEventListener('click', () => checkPuzzleAnswer(index));
+                puzzleOptions.appendChild(button);
+            });
+            
+            puzzleScreen.style.display = 'flex';
+        }
+        
+        // التحقق من إجابة اللغز
+        function checkPuzzleAnswer(selectedIndex) {
+            if (selectedIndex === activePuzzle.correct) {
+                score += 20;
+                scoreInfo.textContent = `النقاط: ${score}`;
+                showMessage("إجابة صحيحة!", "لقد حصلت على 20 نقطة!");
+            } else {
+                showMessage("إجابة خاطئة", `الجواب الصحيح هو: ${activePuzzle.options[activePuzzle.correct]}`);
+            }
+            puzzleScreen.style.display = 'none';
+            activePuzzle = null;
+        }
+        
+        // التحقق من الاصطدامات
+        function checkCollisions() {
+            // التحقق من العناصر القابلة للجمع
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                if (character.position.distanceTo(item.position) < 1.5) {
+                    scene.remove(item);
+                    items.splice(i, 1);
+                    collectedItems++;
+                    score += 10;
+                    itemsInfo.textContent = `العناصر: ${collectedItems}/${totalItems}`;
+                    scoreInfo.textContent = `النقاط: ${score}`;
+                    
+                    // إضافة العنصر إلى المخزون
+                    const inventoryItem = document.createElement('div');
+                    inventoryItem.className = 'inventory-item';
+                    inventoryItem.textContent = '🔑';
+                    inventory.appendChild(inventoryItem);
+                    inventoryItems.push('key');
+                    
+                    showMessage("لقد وجدت مفتاحاً!", `لديك الآن ${collectedItems} من ${totalItems} مفاتيح`);
+                    
+                    if (collectedItems === totalItems) {
+                        showMessage("تهانينا!", "لقد جمعت جميع المفاتيح! الآن اذهب إلى الباب الذهبي لإنهاء اللعبة!");
+                        missionText.textContent = "اذهب إلى الباب الذهبي لإنهاء اللعبة";
+                    }
+                }
+            }
+            
+            // التحقق من الأبواب
+            doors.forEach(door => {
+                if (character.position.distanceTo(door.position) < 3) {
+                    if (door.userData.isFinalDoor) {
+                        if (collectedItems >= totalItems) {
+                            showMessage("تهانينا!", "لقد أكملت اللعبة بنجاح!");
+                            // يمكن إضافة المزيد من الإجراءات عند إنهاء اللعبة
+                        } else {
+                            showMessage("الباب مغلق", "أنت بحاجة إلى جمع جميع المفاتيح أولاً!");
+                        }
+                    } else if (door.userData.requiresKey) {
+                        if (inventoryItems.includes('key')) {
+                            // استخدام مفتاح لفتح الباب
+                            const keyIndex = inventoryItems.indexOf('key');
+                            inventoryItems.splice(keyIndex, 1);
+                            inventory.removeChild(inventory.children[keyIndex]);
+                            
+                            scene.remove(door);
+                            doors = doors.filter(d => d !== door);
+                            showMessage("لقد فتحت الباب!", "استخدمت مفتاحاً لفتح هذا الباب");
+                        } else {
+                            showMessage("الباب مغلق", "أنت بحاجة إلى مفتاح لفتح هذا الباب!");
+                        }
+                    } else {
+                        // باب بدون مفتاح - عرض لغز
+                        showPuzzle();
+                    }
+                }
+            });
+        }
+        
+        // تحديث الحركة
+        function updateMovement() {
+            // التحكم باللمس
+            if (touchControls.up) moveCharacter(0, 0, -speed);
+            if (touchControls.down) moveCharacter(0, 0, speed);
+            if (touchControls.left) character.rotation.y += rotationSpeed;
+            if (touchControls.right) character.rotation.y -= rotationSpeed;
+            
+            // التحكم بلوحة المفاتيح
+            if (keys['ArrowUp'] || keys['KeyW']) moveCharacter(0, 0, -speed);
+            if (keys['ArrowDown'] || keys['KeyS']) moveCharacter(0, 0, speed);
+            if (keys['ArrowLeft'] || keys['KeyA']) character.rotation.y += rotationSpeed;
+            if (keys['ArrowRight'] || keys['KeyD']) character.rotation.y -= rotationSpeed;
+            
+            // تحديث موضع الكاميرا لتبع الشخصية
+            const cameraOffset = new THREE.Vector3(0, 5, 10);
+            cameraOffset.applyQuaternion(character.quaternion);
+            camera.position.copy(character.position).add(cameraOffset);
+            camera.lookAt(character.position);
+            
+            // تحديث معلومات الموقع
+            positionInfo.textContent = `الموقع: (${character.position.x.toFixed(1)}, ${character.position.y.toFixed(1)}, ${character.position.z.toFixed(1)})`;
+            
+            // التحقق من الاصطدامات
+            checkCollisions();
+            
+            // تحديث مواقع اللاعبين الآخرين بشكل سلس
+            updateOtherPlayers();
+
+            // Send position and rotation to server if connected and moving
+            if (socket && socket.connected) {
+                const moved = keys['ArrowUp'] || keys['KeyW'] || keys['ArrowDown'] || keys['KeyS'] || touchControls.up || touchControls.down;
+                const rotated = keys['ArrowLeft'] || keys['KeyA'] || keys['ArrowRight'] || keys['KeyD'] || touchControls.left || touchControls.right;
+
+                if (moved || rotated) {
+                    socket.emit('move', {
+                        roomId,
+                        position: {
+                            x: character.position.x,
+                            y: character.position.y,
+                            z: character.position.z
+                        },
+                        rotation: {
+                            y: character.rotation.y
+                        }
+                    });
+                }
+            }
+        }
+        
+        // دالة لتحديث مواقع اللاعبين الآخرين بشكل سلس
+        function updateOtherPlayers() {
+            for (const id in otherPlayers) {
+                if (playerTargets[id]) {
+                    // تحريك سلس للموقع
+                    otherPlayers[id].position.lerp(playerTargets[id].position, interpolationFactor);
+                    
+                    // تحريك سلس للدوران
+                    // نحتاج إلى معالجة خاصة للدوران لتجنب الدوران الطويل
+                    const currentRotation = otherPlayers[id].rotation.y;
+                    const targetRotation = playerTargets[id].rotation.y;
+                    
+                    // حساب أقصر مسار للدوران
+                    let rotationDiff = targetRotation - currentRotation;
+                    
+                    // تعديل الدوران ليكون في النطاق [-PI, PI]
+                    if (rotationDiff > Math.PI) rotationDiff -= Math.PI * 2;
+                    if (rotationDiff < -Math.PI) rotationDiff += Math.PI * 2;
+                    
+                    // تطبيق الدوران بشكل سلس
+                    otherPlayers[id].rotation.y += rotationDiff * interpolationFactor;
+                }
+            }
+        }
+        
+        // حركة الشخصية
+        function moveCharacter(x, y, z) {
+            const direction = new THREE.Vector3(x, y, z);
+            direction.applyQuaternion(character.quaternion);
+            character.position.add(direction);
+            
+            // التأكد من بقاء الشخصية فوق الأرضية
+            character.position.y = 1;
+        }
+        
+        // دورة التصيير
+        function animate() {
+            requestAnimationFrame(animate);
+            updateMovement();
+            renderer.render(scene, camera);
+        }
+        
+        // إضافة مستمع الحدث لزر بدء اللعبة
+        document.getElementById('start-button').addEventListener('click', function() {
+            startGame();
+        });
+        
+        // دالة بدء اللعبة
+        function startGame() {
+            // إخفاء شاشة البداية
+            document.getElementById('start-screen').style.display = 'none';
+            
+            // إظهار واجهة اللعبة
+            document.getElementById('ui').style.display = 'block';
+            
+            // تعيين حالة بدء اللعبة
+            gameStarted = true;
+            
+            // تحديث نص المهمة
+            document.getElementById('mission-text').textContent = 'ابحث عن الأدلة للعثور على الكنز المخفي!';
+            
+            // إظهار رسالة ترحيبية
+            showMessage('مرحباً بك!', 'ابحث عن الأدلة المخفية في العالم للعثور على الكنز المخفي. اللاعب الذي يجده أولاً يفوز!');
+        }
+        
+        // إظهار رسالة للاعب
+        function showMessage(title, content) {
+            const messageBox = document.getElementById('message-box');
+            const messageTitle = document.getElementById('message-title');
+            const messageContent = document.getElementById('message-content');
+            
+            messageTitle.textContent = title;
+            messageContent.textContent = content;
+            messageBox.style.display = 'block';
+        }
+        
+        // إضافة مستمع الحدث لزر إغلاق الرسالة
+        document.getElementById('close-message').addEventListener('click', function() {
+            document.getElementById('message-box').style.display = 'none';
+        });
+        
+        // التحقق من الاصطدامات مع الأدلة والكنز
+        function checkCollisions() {
+            if (!gameStarted || treasureFound) return;
+            
+            // التحقق من الاصطدام مع الأدلة
+            for (let i = 0; i < clues.length; i++) {
+                const clue = clues[i];
+                if (!discoveredClues.includes(i) && character.position.distanceTo(clue.position) < 2) {
+                    // العثور على دليل جديد
+                    discoveredClues.push(i);
+                    
+                    // إظهار رسالة للاعب
+                    showMessage(clue.userData.title, clue.userData.description);
+                    
+                    // تحديث معلومات الدليل
+                    document.getElementById('clue-info').textContent = `الدليل: ${clue.userData.description}`;
+                    
+                    // تحديث عدد العناصر المكتشفة
+                    collectedItems++;
+                    document.getElementById('items-info').textContent = `العناصر المكتشفة: ${collectedItems}`;
+                    
+                    // إرسال إشعار للاعبين الآخرين
+                    if (socket && socket.connected) {
+                        socket.emit('clue-found', { roomId, clueIndex: i });
+                    }
+                    
+                    // تغيير لون الدليل ليظهر أنه تم اكتشافه
+                    clue.material.color.set(0xFFFFFF);
+                    clue.material.emissive.set(0xFFFFFF);
+                }
+            }
+            
+            // التحقق من الاصطدام مع الكنز
+            if (hiddenTreasure && character.position.distanceTo(hiddenTreasure.position) < 2) {
+                // العثور على الكنز
+                treasureFound = true;
+                winner = playerName;
+                
+                // إظهار رسالة للاعب
+                showMessage("تهانينا!", "لقد عثرت على الكنز المخفي!");
+                
+                // إرسال إشعار للاعبين الآخرين
+                if (socket && socket.connected) {
+                    socket.emit('treasure-found', { roomId, playerName });
+                }
+                
+                // إخفاء الكنز
+                hiddenTreasure.visible = false;
+            }
+        }
+        
+        // تهيئة اللعبة
+        init();
+    </script>
+</body>
+</html>
